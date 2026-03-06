@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { conversationSchema } from '@/lib/validations'
+import { handleError } from '@/lib/error-handler'
 
 export async function GET(req: Request) {
   try {
@@ -58,14 +60,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { projectId, title } = await req.json()
-
-    if (!projectId) {
-      return NextResponse.json(
-        { error: 'Project ID required' },
-        { status: 400 }
-      )
-    }
+    const body = await req.json()
+    const { projectId, title } = conversationSchema.parse(body)
 
     const project = await db.project.findFirst({
       where: {
@@ -87,10 +83,6 @@ export async function POST(req: Request) {
 
     return NextResponse.json(conversation)
   } catch (error) {
-    console.error('Create conversation error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+    return handleError(error)
   }
 }

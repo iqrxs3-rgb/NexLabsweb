@@ -1,12 +1,15 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import ChatTab from '@/components/ChatTab'
 import CodeTab from '@/components/CodeTab'
 import ImagesTab from '@/components/ImagesTab'
 import VoiceTab from '@/components/VoiceTab'
 
-export default function DashboardPage() {
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
+function DashboardContent() {
   const [activeTab, setActiveTab] = useState('chat')
 
   useEffect(() => {
@@ -32,5 +35,13 @@ export default function DashboardPage() {
       {activeTab === 'images' && <ImagesTab />}
       {activeTab === 'voice' && <VoiceTab />}
     </div>
+  )
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={<div className="p-4">Loading...</div>}>
+      <DashboardContent />
+    </Suspense>
   )
 }

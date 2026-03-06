@@ -148,6 +148,11 @@ export default function CodeTab() {
     return localStorage.getItem('selectedProjectId') || ''
   }
 
+  // RTL support: adjust editor container direction based on document direction
+  const [isRTL, setIsRTL] = useState(false)
+  useEffect(() => {
+    setIsRTL(typeof document !== 'undefined' && document.documentElement.dir === 'rtl')
+  }, [])
   return (
     <div className="h-full flex">
       <div className="w-64 border-r border-white/10 flex flex-col p-4">
@@ -233,7 +238,7 @@ export default function CodeTab() {
               </div>
             </div>
 
-            <div className="flex-1 overflow-hidden">
+            <div className="flex-1 overflow-hidden" style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
               <Editor
                 height="100%"
                 language={selectedFile.language}

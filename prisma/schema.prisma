@@ -13,8 +13,17 @@ model User {
   email     String    @unique
   password  String
   plan      String    @default("free")
+  stripeCustomerId String?
+  subscriptionEnd   DateTime?
+  isAdmin   Boolean   @default(false)
+  referralCode      String?   @unique
+  referredBy        String?
+  referralRewards   Int       @default(0)
   createdAt DateTime  @default(now())
   projects  Project[]
+  supportTickets    SupportTicket[]
+  auditLogs         AuditLog[]
+  apiKeys    ApiKey[]
 }
 
 model Project {
@@ -74,5 +83,51 @@ model VoiceFile {
   voice     String
   projectId String
   project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model SupportTicket {
+  id          String   @id @default(cuid())
+  subject     String
+  description String
+  status      String   @default("open")
+  priority    String   @default("medium")
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  adminReply  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String
+  details   String?
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model Payment {
+  id              String   @id @default(cuid())
+  amount          Float
+  currency        String   @default("USD")
+  status          String   @default("pending")
+  paytabsRef      String?
+  customerEmail   String
+  userId          String?
+  plan            String
+  createdAt       DateTime @default(now())
+}
+
+model ApiKey {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  name      String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lastUsed  DateTime?
   createdAt DateTime @default(now())
 }

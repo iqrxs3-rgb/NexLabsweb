@@ -1,24 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import bcrypt from 'bcrypt'
+import bcrypt from 'bcryptjs'
 import { db } from '@/lib/db'
+import { registerSchema } from '@/lib/validations'
+import { handleError } from '@/lib/error-handler'
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, email, password } = await req.json()
-
-    if (!name || !email || !password) {
-      return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
-      )
-    }
-
-    if (password.length < 6) {
-      return NextResponse.json(
-        { error: 'Password must be at least 6 characters' },
-        { status: 400 }
-      )
-    }
+    const body = await req.json()
+    const { name, email, password } = registerSchema.parse(body)
 
     const existingUser = await db.user.findUnique({
       where: { email },
@@ -33,7 +22,7 @@ export async function POST(req: NextRequest) {
 
     const hashedPassword = await bcrypt.hash(password, 10)
 
-    const user = await db.user.create({
+    await db.user.create({
       data: {
         name,
         email,
@@ -42,14 +31,10 @@ export async function POST(req: NextRequest) {
     })
 
     return NextResponse.json(
-      { message: 'User created successfully', userId: user.id },
+      { message: 'User created successfully' },
       { status: 201 }
     )
   } catch (error) {
-    console.error('Registration error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+    return handleError(error)
   }
 }

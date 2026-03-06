@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import Groq from 'groq-sdk'
+import { chatSchema } from '@/lib/validations'
+import { handleError } from '@/lib/error-handler'
+import { withRateLimit } from '@/lib/rate-limit'
 
 const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY,
@@ -8,22 +11,21 @@ const groq = new Groq({
 
 export async function POST(req: NextRequest) {
   try {
+    const rateLimitResponse = withRateLimit(req)
+    if (rateLimitResponse) {
+      return rateLimitResponse
+    }
+
     const session = await auth()
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { messages } = await req.json()
-
-    if (!messages || !Array.isArray(messages)) {
-      return NextResponse.json(
-        { error: 'Invalid messages format' },
-        { status: 400 }
-      )
-    }
+    const body = await req.json()
+    const { message } = chatSchema.parse(body)
 
     const stream = await groq.chat.completions.create({
-      messages,
+      messages: [{ role: 'user', content: message }],
       model: 'llama-3.3-70b-versatile',
       stream: true,
       temperature: 0.7,
@@ -52,10 +54,6 @@ export async function POST(req: NextRequest) {
       },
     })
   } catch (error) {
-    console.error('Chat error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+    return handleError(error)
   }
 }

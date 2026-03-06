@@ -52,6 +52,16 @@ npx prisma generate
 npm run dev
 ```
 
+## Running Tests
+
+```bash
+# Run all tests
+npm run test
+
+# Run tests with UI
+npm run test:ui
+```
+
 ## Deployment to Railway
 
 1. **Create Railway project**

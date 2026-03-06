@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { projectSchema } from '@/lib/validations'
+import { handleError } from '@/lib/error-handler'
 
 export async function GET(req: NextRequest) {
   try {
@@ -31,14 +33,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { name, description } = await req.json()
-
-    if (!name) {
-      return NextResponse.json(
-        { error: 'Project name is required' },
-        { status: 400 }
-      )
-    }
+    const body = await req.json()
+    const { name, description } = projectSchema.parse(body)
 
     const project = await db.project.create({
       data: {
@@ -50,10 +46,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(project, { status: 201 })
   } catch (error) {
-    console.error('Create project error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+    return handleError(error)
   }
 }

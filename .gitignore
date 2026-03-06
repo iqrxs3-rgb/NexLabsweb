@@ -47,3 +47,4 @@ logs/**
 # editor
 .history
 .cursor
+py

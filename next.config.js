@@ -4,6 +4,9 @@ const nextConfig = {
     images: {
       domains: ['image.pollinations.ai'],
     },
+    experimental: {
+      taint: true,
+    },
     webpack: (config, { isServer }) => {
       if (isServer) {
         config.externals.push({
